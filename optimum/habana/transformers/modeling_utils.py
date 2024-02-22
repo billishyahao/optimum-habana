@@ -79,6 +79,7 @@ from .models import (
     gaudi_falcon_attention_forward,
     gaudi_falcon_attention_split_heads,
     gaudi_falcon_decoder_layer_forward,
+    gaudi_generate_speech,
     gaudi_get_extended_attention_mask,
     gaudi_gpt2_block_forward,
     gaudi_gpt2_forward,
@@ -103,6 +104,10 @@ from .models import (
     gaudi_opt_model_forward,
     gaudi_rot_matmul,
     gaudi_rot_vec_mul,
+    gaudi_SpeechT5Attention_forward,
+    gaudi_SpeechT5Decoder_forward,
+    gaudi_SpeechT5DecoderLayer_forward,
+    gaudi_SpeechT5SpeechDecoderPrenet_forward,
     gaudi_t5_layernorm_forward,
     gaudi_T5Attention_forward,
     gaudi_T5Block_forward,
@@ -303,3 +308,12 @@ def adapt_transformers_to_gaudi():
     transformers.models.blip.modeling_blip_text.BlipTextSelfAttention.forward = gaudi_BlipTextSelfAttention_forward
     transformers.models.blip.BlipForQuestionAnswering.generate = gaudi_BlipForQuestionAnswering_generate
     transformers.models.blip.BlipForConditionalGeneration.generate = gaudi_BlipForConditionalGeneration_generate
+
+    # Optimization for speecht5 on Gaudi
+    transformers.models.speecht5.modeling_speecht5.SpeechT5Decoder.forward = gaudi_SpeechT5Decoder_forward
+    transformers.models.speecht5.modeling_speecht5.SpeechT5DecoderLayer.forward = gaudi_SpeechT5DecoderLayer_forward
+    transformers.models.speecht5.modeling_speecht5.SpeechT5Attention.forward = gaudi_SpeechT5Attention_forward
+    transformers.models.speecht5.modeling_speecht5._generate_speech = gaudi_generate_speech
+    transformers.models.speecht5.modeling_speecht5.SpeechT5SpeechDecoderPrenet.forward = (
+        gaudi_SpeechT5SpeechDecoderPrenet_forward
+    )
