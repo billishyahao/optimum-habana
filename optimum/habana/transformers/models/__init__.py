@@ -70,6 +70,13 @@ from .gemma import (
     gaudi_gemma_attention_forward,
     gaudi_gemma_model_forward,
 )
+from .gemma2 import (
+    GaudiGemma2DecoderLayer,
+    GaudiGemma2ForCausalLM,
+    GaudiGemma2Attention,
+    GaudiGemma2Model,
+    GaudiGemma2MLP,
+)
 from .gpt2 import (
     GaudiGPT2Attention,
     GaudiGPT2Block,
