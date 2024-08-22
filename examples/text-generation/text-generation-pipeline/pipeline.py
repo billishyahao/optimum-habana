@@ -57,6 +57,8 @@ class GaudiTextGenerationPipeline(TextGenerationPipeline):
         for t in model_inputs:
             if torch.is_tensor(model_inputs[t]):
                 model_inputs[t] = model_inputs[t].to(self.device)
+                print(f"yahao-dbg: model_inputs[t]: {model_inputs[t].cpu()}")
+                print(f"yahao-dbg: model_inputs[t]: {model_inputs[t].cpu().shape}")
 
         output = self.model.generate(
             **model_inputs,

@@ -48,7 +48,7 @@ def setup_parser(parser):
         "--model_name_or_path",
         default=None,
         type=str,
-        required=True,
+        required=False,
         help="Path to pre-trained model (on the HF Hub or locally).",
     )
     parser.add_argument(

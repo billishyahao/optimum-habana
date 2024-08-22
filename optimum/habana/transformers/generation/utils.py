@@ -833,6 +833,9 @@ class GaudiGenerationMixin(GenerationMixin):
         inputs_tensor, model_input_name, model_kwargs = self._prepare_model_inputs(
             inputs, generation_config.bos_token_id, model_kwargs
         )
+
+        print(f"yahao-dbg: generate dbg0: input_ids: {inputs_tensor}")
+
         batch_size = inputs_tensor.shape[0]
 
         device = inputs_tensor.device
@@ -868,6 +871,8 @@ class GaudiGenerationMixin(GenerationMixin):
                 inputs_tensor, generation_config._pad_token_tensor, generation_config._eos_token_tensor
             )
 
+        print(f"yahao-dbg: generate: generation_config.to_dict(): {generation_config.to_dict()}")
+
         is_greedy_or_beam_and_bucket = (
             not generation_config.bucket_internal
             and generation_config.bucket_size > 0
@@ -880,6 +885,10 @@ class GaudiGenerationMixin(GenerationMixin):
                 GenerationMode.CONTRASTIVE_SEARCH,
             ]
         )
+
+        is_greedy_or_beam_and_bucket = True
+
+        
         model_kwargs["bucket_size"] = generation_config.bucket_size if generation_config.static_shapes else -1
         model_kwargs["bucket_internal"] = generation_config.bucket_internal
         model_kwargs["reduce_recompile"] = (
@@ -912,6 +921,8 @@ class GaudiGenerationMixin(GenerationMixin):
 
         if self.config.model_type == "gemma2":
             generation_config.cache_implementation = None
+
+        print(f"yahao-dbg: generate dbg11: input_ids: {inputs_tensor}")
 
         if generation_config.static_shapes:
             # Pad inputs to have static shapes during generation, this gives better performance than dynamic shapes on HPUs
@@ -951,6 +962,8 @@ class GaudiGenerationMixin(GenerationMixin):
                         inputs_tensor.device,
                     )
 
+        print(f"yahao-dbg: generate dbg12: input_ids: {inputs_tensor}")
+
         if self.config.is_encoder_decoder and "encoder_outputs" not in model_kwargs:
             # if model is encoder decoder encoder_outputs are created and added to `model_kwargs`
             model_kwargs = self._prepare_encoder_decoder_kwargs_for_generation(
@@ -970,6 +983,8 @@ class GaudiGenerationMixin(GenerationMixin):
             )
         else:
             input_ids = inputs_tensor if model_input_name == "input_ids" else model_kwargs.pop("input_ids")
+
+        print(f"yahao-dbg: generate dbg1: input_ids: {input_ids}")
 
         if generation_config.token_healing:
             input_ids = self.heal_tokens(input_ids, tokenizer)
@@ -2172,6 +2187,8 @@ class GaudiGenerationMixin(GenerationMixin):
 
         """
         # init values
+
+        print(f"yahao-dbg: _sample: enter input_ids: {input_ids}")
         pad_token_id = generation_config._pad_token_tensor
         output_attentions = generation_config.output_attentions
         output_hidden_states = generation_config.output_hidden_states
@@ -2240,6 +2257,10 @@ class GaudiGenerationMixin(GenerationMixin):
                 input_ids, model_kwargs = self.update_model_kwargs_for_bucketing(
                     params, input_ids, model_kwargs, pad_token_id, bucket_size, reduce_recompile
                 )
+            
+            print(f"yahao-dbg: _sample: update_model_kwargs_for_bucketing bucket_size: {bucket_size}")
+            print(f"yahao-dbg: _sample: update_model_kwargs_for_bucketing input_ids: {input_ids}")
+
 
             # prepare model inputs
             model_inputs = self.prepare_inputs_for_generation(input_ids, **model_kwargs)

@@ -17,7 +17,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""PyTorch Gemma model."""
+"""PyTorch Gemma2 model."""
 
 from typing import List, Optional, Tuple, Union
 
@@ -400,7 +400,10 @@ class GaudiGemma2DecoderLayer(Gemma2DecoderLayer):
         flash_attention_causal_mask: Optional[bool] = False,
         cache_idx: int = None,
     ) -> Tuple[torch.FloatTensor, Optional[Tuple[torch.FloatTensor, torch.FloatTensor]]]:
+
         hidden_states = self.input_layernorm(hidden_states)
+        #print(f"yahao-dbg: gaudi after first norm: hidden_states: {hidden_states.cpu()}")
+
         hidden_states, attn_weights, present_key_value = self.self_attn.pre_attn_forward(
             hidden_states,
             attention_mask,
@@ -468,6 +471,8 @@ class GaudiGemma2DecoderLayer(Gemma2DecoderLayer):
 
         hidden_states = self.post_mlp(hidden_states, residual)
 
+        # #print(f"yahao-dbg: gaudi after postmlp: hidden_states: {hidden_states.cpu()}")
+
         outputs = (hidden_states,)
 
         if output_attentions:
@@ -480,6 +485,8 @@ class GaudiGemma2DecoderLayer(Gemma2DecoderLayer):
     
     def post_attn_pre_mlp(self, hidden_states, residual):
         hidden_states = self.self_attn.post_attn_forward(hidden_states)
+        #print(f"yahao-dbg: gaudi after attn: hidden_states: {hidden_states.cpu()}")
+        hidden_states = self.post_attention_layernorm(hidden_states)
 
         if self.training:
             hidden_states = hidden_states + residual
@@ -488,13 +495,19 @@ class GaudiGemma2DecoderLayer(Gemma2DecoderLayer):
             residual.add_(hidden_states)
             hidden_states = residual
 
-        hidden_states = self.post_attention_layernorm(hidden_states)
+
+        residual = hidden_states
+        hidden_states = self.pre_feedforward_layernorm(hidden_states)
+        #print(f"yahao-dbg: gaudi after pre_feedforward_layernorm: hidden_states: {hidden_states.cpu()}")
 
         hidden_states = self.mlp.pre_mlp_forward(hidden_states)
         return hidden_states, residual
 
     def post_mlp(self, hidden_states, residual):
+
+        
         hidden_states = self.mlp.post_mlp_forward(hidden_states)
+        hidden_states = self.post_feedforward_layernorm(hidden_states)
 
         if self.training:
             hidden_states = hidden_states + residual
@@ -544,6 +557,7 @@ class GaudiGemma2Model(Gemma2Model):
         - add new args token_idx
         - replace _update_causal_mask with _gaudi_prepare_4d_causal_attention_mask
         """
+        #print(f"yahao-dbg: gaudi input_ids: {input_ids}")
         output_attentions = output_attentions if output_attentions is not None else self.config.output_attentions
         output_hidden_states = (
             output_hidden_states if output_hidden_states is not None else self.config.output_hidden_states
@@ -810,7 +824,23 @@ class GaudiGemma2ForCausalLM(Gemma2ForCausalLM):
         - from step2 when enable KV cache, slice next_position_ids from position_ids base on the token_idx
         """
 
+        #print(f"yahao-dbg: gaudi prepare_inputs_for_generation: input_ids: {input_ids}")
+        #print(f"yahao-dbg: gaudi prepare_inputs_for_generation: input_ids.device: {input_ids.device}")
+        #print(f"yahao-dbg: gaudi prepare_inputs_for_generation: input_ids.dtype: {input_ids.dtype}")
+        #print(f"yahao-dbg: gaudi prepare_inputs_for_generation: input_ids.shape: {input_ids.shape}")
+        # input_ids = [[     2,  14326,   3054,    476,   1069, 235269,   1104,    603]]
+        # input_ids = torch.tensor(input_ids).to("hpu")
+
+        # #print(f"yahao-dbg: gaudi prepare_inputs_for_generation: after reset input_ids: {input_ids}")
+
+
+
         token_idx = kwargs.get("token_idx", None)
+        # #print(f"yahao-dbg: gaudi prepare_inputs_for_generation: token_idx.shape: {token_idx.shape}")
+        # #print(f"yahao-dbg: gaudi prepare_inputs_for_generation: token_idx: {token_idx}")
+
+
+
 
         if past_key_values is not None:
             if token_idx is None:
