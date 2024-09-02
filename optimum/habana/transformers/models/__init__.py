@@ -76,6 +76,7 @@ from .gemma2 import (
     GaudiGemma2Attention,
     GaudiGemma2Model,
     GaudiGemma2MLP,
+    GaudiGemma2RotaryEmbedding,
 )
 from .gpt2 import (
     GaudiGPT2Attention,
